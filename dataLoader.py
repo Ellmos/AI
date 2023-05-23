@@ -33,7 +33,8 @@ def ReadDataFiles(imagesFilepath, labelsFilepath, batchSize):
     images = [[]] * size
     for i in range(size):
         img = np.array(image_data[i * rows * cols:(i + 1) * rows * cols])
-        images[i][:] = img/np.linalg.norm(img)
+        img = img * (1.0/img.max())
+        images[i] = img
 
     if batchSize == 0:
         return images, labels

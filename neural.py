@@ -86,7 +86,7 @@ class NeuralNetwork:
                 # layer.UpdateGradient(nodesValues, previousOutputs)
 
         for layer in self.layers:
-            layer.ApplyGradient(len(dataPoints), learningRate)
+            layer.ApplyGradient(learningRate / len(dataPoints))
 
 
 class Layer:
@@ -159,13 +159,13 @@ class Layer:
     #
     #         self.gradientBiases[nodesOut] += nodesValues[nodesOut]
 
-    def ApplyGradient(self, batchSize, learningRate):
+    def ApplyGradient(self, learningRate):
         for nodesOut in range(self.nbrNodesOut):
             for nodesIn in range(self.nbrNodesIn):
                 # dividing by batch size to take the average error over all the training data in the batch
-                self.weights[nodesOut][nodesIn] -= self.gradientWeights[nodesOut][nodesIn] / batchSize * learningRate
+                self.weights[nodesOut][nodesIn] -= self.gradientWeights[nodesOut][nodesIn] * learningRate
 
-            self.biases[nodesOut] -= self.gradientBiases[nodesOut] / batchSize * learningRate
+            self.biases[nodesOut] -= self.gradientBiases[nodesOut] * learningRate
 
         self.gradientWeights = [[0 for _ in range(self.nbrNodesIn)] for _ in range(self.nbrNodesOut)]
         self.gradientBiases = [0 for _ in range(self.nbrNodesOut)]
