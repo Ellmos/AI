@@ -33,16 +33,25 @@ class NeuralNetwork:
         outputs = self.CalculateOutputs(inputs)
         return outputs.index(max(outputs))
 
+
     def DataPointCost(self, dataPoint):
         outputs = self.CalculateOutputs(dataPoint.input)
         return self.Cost(outputs, dataPoint.target)
 
-    def AllDataPointsCost(self, dataPoints):
+    def BatchCost(self, dataPoints):
         cost = 0
         for data in dataPoints:
             cost += self.DataPointCost(data)
 
         return cost / len(dataPoints)
+
+    def DataSetCost(self, dataSet):
+        cost = 0
+        for batch in dataSet:
+            cost += self.BatchCost(batch)
+
+        return cost / len(dataSet)
+
 
     def Learn(self, dataPoints, learningRate):
         for dataPoint in dataPoints:
@@ -68,12 +77,13 @@ class NeuralNetwork:
             # outputLayer.UpdateGradient(nodesValues, previousOutputs)
 
 
+            # Go back through the layers, compute the corresponding node values and update the gradient at the same time
             for i in range(2, self.nbrLayers + 1):
                 previousOutputs = self.layers[-i - 1].outputs if i < self.nbrLayers else dataPoint.input
 
-                layer = self.layers[-i]
-                nodesValues = layer.CalculateHiddenLayerNodesValues(self.layers[-i + 1], nodesValues)
-                layer.UpdateGradient(nodesValues, previousOutputs)
+                currentLayer = self.layers[-i]
+                nodesValues = currentLayer.CalculateHiddenLayerNodesValues(self.layers[-i + 1], nodesValues, previousOutputs)
+                # layer.UpdateGradient(nodesValues, previousOutputs)
 
         for layer in self.layers:
             layer.ApplyGradient(len(dataPoints), learningRate)
@@ -118,32 +128,36 @@ class Layer:
 
         return self.outputs
 
-    def CalculateOutputLayerNodesValues(self, targets):
-        nodesValues = []
-        for nodesOut in range(self.nbrNodesOut):
-            nodesValues.append(CostDerivative(self.outputs[nodesOut], targets[nodesOut]) * self.ActivationDerivative(self.weightedSum, nodesOut))
+    # def CalculateOutputLayerNodesValues(self, targets):
+    #     nodesValues = []
+    #     for nodesOut in range(self.nbrNodesOut):
+    #         nodesValues.append(CostDerivative(self.outputs[nodesOut], targets[nodesOut]) * self.ActivationDerivative(self.weightedSum, nodesOut))
+    #
+    #     return nodesValues
 
-        return nodesValues
-
-    def CalculateHiddenLayerNodesValues(self, oldLayer, oldNodesValues):
+    def CalculateHiddenLayerNodesValues(self, oldLayer, oldNodesValues, previousOutputs):
         newNodeValues = []
 
-        for newNodesOut in range(self.nbrNodesOut):
+        for nodesOut in range(self.nbrNodesOut):
             newNodeValue = 0
             for oldNodesOut in range(oldLayer.nbrNodesOut):
-                newNodeValue += oldLayer.weights[oldNodesOut][newNodesOut] * oldNodesValues[oldNodesOut]
+                newNodeValue += oldLayer.weights[oldNodesOut][nodesOut] * oldNodesValues[oldNodesOut]
 
-            newNodeValue *= self.ActivationDerivative(self.weightedSum, newNodesOut)
+            newNodeValue *= self.ActivationDerivative(self.weightedSum, nodesOut)
             newNodeValues.append(newNodeValue)
+
+            self.gradientBiases[nodesOut] += newNodeValue
+            for nodesIn in range(self.nbrNodesIn):
+                self.gradientWeights[nodesOut][nodesIn] += previousOutputs[nodesIn] * newNodeValue
 
         return newNodeValues
 
-    def UpdateGradient(self, nodesValues, previousOutputs):
-        for nodesOut in range(self.nbrNodesOut):
-            for nodesIn in range(self.nbrNodesIn):
-                self.gradientWeights[nodesOut][nodesIn] += previousOutputs[nodesIn] * nodesValues[nodesOut]
-
-            self.gradientBiases[nodesOut] += nodesValues[nodesOut]
+    # def UpdateGradient(self, nodesValues, previousOutputs):
+    #     for nodesOut in range(self.nbrNodesOut):
+    #         for nodesIn in range(self.nbrNodesIn):
+    #             self.gradientWeights[nodesOut][nodesIn] += previousOutputs[nodesIn] * nodesValues[nodesOut]
+    #
+    #         self.gradientBiases[nodesOut] += nodesValues[nodesOut]
 
     def ApplyGradient(self, batchSize, learningRate):
         for nodesOut in range(self.nbrNodesOut):

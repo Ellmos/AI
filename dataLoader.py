@@ -35,7 +35,7 @@ def ReadDataFiles(imagesFilepath, labelsFilepath, batchSize):
         img = np.array(image_data[i * rows * cols:(i + 1) * rows * cols])
         images[i][:] = img/np.linalg.norm(img)
 
-    if batchSize == 1:
+    if batchSize == 0:
         return images, labels
 
     batchNumber = len(images) / batchSize
@@ -44,7 +44,7 @@ def ReadDataFiles(imagesFilepath, labelsFilepath, batchSize):
     return images, labels
 
 
-def LoadMnistDataset(batchSize=1):
+def LoadMnistDataset(batchSize):
     dataDirectory = './data/'
     training_images_filepath = dataDirectory + 'train-images.idx3-ubyte'
     training_labels_filepath = dataDirectory + 'train-labels.idx1-ubyte'
@@ -52,7 +52,9 @@ def LoadMnistDataset(batchSize=1):
     test_labels_filepath = dataDirectory + 't10k-labels.idx1-ubyte'
 
     x_train, y_train = ReadDataFiles(training_images_filepath, training_labels_filepath, batchSize)
-    x_test, y_test = ReadDataFiles(test_images_filepath, test_labels_filepath, 1)
+    x_test, y_test = ReadDataFiles(test_images_filepath, test_labels_filepath, 0)
 
+    if batchSize == 0:
+        return ([x_train], [y_train]), (x_test, y_test)
 
     return (x_train, y_train), (x_test, y_test)
