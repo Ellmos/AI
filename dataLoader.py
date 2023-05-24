@@ -13,7 +13,7 @@ def Normalize(arr):
     return norm_arr
 
 
-def ReadDataFiles(imagesFilepath, labelsFilepath, batchSize):
+def ReadMnistFiles(imagesFilepath, labelsFilepath, batchSize):
     labels = []
     # Read labels file
     with open(labelsFilepath, 'rb') as file:
@@ -45,17 +45,21 @@ def ReadDataFiles(imagesFilepath, labelsFilepath, batchSize):
     return images, labels
 
 
-def LoadMnistDataset(batchSize):
+def LoadPersonalDataset()
+
+
+def LoadDataset(batchSize):
     dataDirectory = './data/'
     training_images_filepath = dataDirectory + 'train-images.idx3-ubyte'
     training_labels_filepath = dataDirectory + 'train-labels.idx1-ubyte'
     test_images_filepath = dataDirectory + 't10k-images.idx3-ubyte'
     test_labels_filepath = dataDirectory + 't10k-labels.idx1-ubyte'
 
-    x_train, y_train = ReadDataFiles(training_images_filepath, training_labels_filepath, batchSize)
-    x_test, y_test = ReadDataFiles(test_images_filepath, test_labels_filepath, 0)
+    x_train, y_train = ReadMnistFiles(training_images_filepath, training_labels_filepath, batchSize)
+    x_test, y_test = ReadMnistFiles(test_images_filepath, test_labels_filepath, 0)
 
     if batchSize == 0:
         return ([x_train], [y_train]), (x_test, y_test)
 
     return (x_train, y_train), (x_test, y_test)
+

@@ -1,7 +1,7 @@
 from neural import NeuralNetwork
 from ActivationFunctions import ActivationFunctions
 from CostFunctions import CostFunctions
-from dataLoader import LoadMnistDataset
+from dataLoader import LoadDataset
 
 from random import shuffle
 from dataclasses import dataclass
@@ -18,7 +18,7 @@ class Data:
 
 def GenerateDataSet(batchSize=0):
     print("--------------Creating Dataset-------------------")
-    (x_train, y_train), (x_test, y_test) = LoadMnistDataset(batchSize)
+    (x_train, y_train), (x_test, y_test) = LoadDataset(batchSize)
 
     trainDataSet = []
     for (batch_x, batch_y) in zip(x_train, y_train):
@@ -55,7 +55,7 @@ t = time()
 trainDataSet, testDataSet = GenerateDataSet(batchSize)
 
 print("DatSet created in:", time() - t, "seconds")
-trainDataSet = trainDataSet[:2000]
+trainDataSet = trainDataSet[:200]
 # testDataSet = testDataSet[:1000]
 
 
@@ -87,7 +87,15 @@ plt.plot(range(len(costs)), costs)
 plt.title("Neural network\nDataSet:{}, BatchSize:{}, Epoch:{}, InitialRate:{}, Decay:{}".format(len(trainDataSet), batchSize, epoch, initialLearningRate, learnRateDecay))
 plt.xlabel("Epoch")
 plt.ylabel("Cost")
-plt.savefig("dataset{}_batch{}_epoch{}_lr{}_decay{}.png".format(len(trainDataSet), batchSize, epoch, initialLearningRate, learnRateDecay))
-plt.show()
 
+path = "/home/elmos/Desktop/ai/digits/"
+imageName = "hyperParameters/dataset{}_batch{}_epoch{}_lr{}_decay{}.png".format(len(trainDataSet), batchSize, epoch, initialLearningRate, learnRateDecay)
+plt.savefig(imageName)
+
+with open(path + "hyperParameters/HyperParameters.csv", "a") as file:
+    file.write("{},{},{},{},{},{}\n".format(len(trainDataSet), batchSize, epoch, initialLearningRate, learnRateDecay, "file://"+path+imageName))
+
+
+
+plt.show()
 print("\nNeural network cost:", costs[-1])
