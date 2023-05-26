@@ -18,7 +18,15 @@ def MeanSquareDerivative(outputValue, targetValue):
 def CrossEntropy(outputValues, targetValues):
     cost = 0
     for (output, target) in zip(outputValues, targetValues):
-        tmp = -log(output) if (target == 1) else -log(1 - output)
+        # output = 1 so plant
+
+        if target == 1:
+            tmp = -log(output)
+        elif output == 1:
+            tmp = 36 # lowest value for python log
+        else:
+            tmp = -log(1 - output)
+
         if not isnan(tmp):
             cost += tmp
 

@@ -1,28 +1,52 @@
 from ActivationFunctions import ActivationFunctions
 from CostFunctions import CostFunctions
+import json
 
-def CostDerivative(outputValue, targetValue):
-    return outputValue - targetValue
 
+class HyperParameters:
+    def __init__(self):
+        self.activationFunction = ActivationFunctions.Relu
+        self.outputActivationType = ActivationFunctions.Softmax
+        self.costFunction = CostFunctions.CrossEntropy
+        self.initialLearningRate = 0.075
+        self.learnRateDecay = 0.075
+        self.batchSize = 32
+        self.epoch = 5
 
 class NeuralNetwork:
-    def __init__(self, layersSizes, CostFunction=CostFunctions.CrossEntropy):
+    def __init__(self, layersSizes):
         self.nbrLayers = len(layersSizes) - 1
         self.layers = [Layer(layersSizes[i], layersSizes[i + 1]) for i in range(self.nbrLayers)]
-        self.Cost = CostFunction.value.function
-        self.CostDerivative = CostFunction.value.derivative
+        self.Cost = CostFunctions.CrossEntropy.value.function
+        self.CostDerivative = CostFunctions.CrossEntropy.value.derivative
+        self.layers[-1].SetActivationFunction(ActivationFunctions.Softmax)
 
-    def SetActivationFunction(self, ActivationFunction):
+    def ToJson(self, path):
+        jsonObject = {
+            "layersSizes": [self.layers[0].nbrNodesIn],
+            "layers": []
+        }
+
         for layer in self.layers:
-            layer.Activation = ActivationFunction.value.function
-            layer.ActivationDerivative = ActivationFunction.value.derivative
+            jsonObject["layersSizes"].append(layer.nbrNodesOut)
+            jsonObject["layers"].append(layer.ToJson())
 
-    def SetOutputActivationFunction(self, ActivationFunction):
-        self.layers[-1].SetActivationFunction(ActivationFunction)
+        print(jsonObject)
+        with open(path+".json", "w") as save:
+            save.write(json.dumps(jsonObject))
+
+
+    def SetActivationFunctions(self, ActivationFunction, outputActivationFunction):
+        for layer in self.layers:
+            layer.SetActivationFunction(ActivationFunction)
+
+        self.layers[-1].SetActivationFunction(outputActivationFunction)
 
     def SetCostFunction(self, CostFunction):
         self.Cost = CostFunction.value.function
         self.CostDerivative = CostFunction.value.derivative
+
+
 
     def CalculateOutputs(self, inputs):
         for layer in self.layers:
@@ -65,7 +89,7 @@ class NeuralNetwork:
             nodesValues = []
             for nodesOut in range(outputLayer.nbrNodesOut):
                 activationDerivative = outputLayer.ActivationDerivative(outputLayer.weightedSum, nodesOut)
-                costDerivative = CostDerivative(outputLayer.outputs[nodesOut], dataPoint.target[nodesOut])
+                costDerivative = self.CostDerivative(outputLayer.outputs[nodesOut], dataPoint.target[nodesOut])
                 currentNodeValue = costDerivative * activationDerivative
                 nodesValues.append(currentNodeValue)
 
@@ -74,16 +98,12 @@ class NeuralNetwork:
                     outputLayer.gradientWeights[nodesOut][nodesIn] += previousOutputs[nodesIn] * currentNodeValue
 
 
-            # outputLayer.UpdateGradient(nodesValues, previousOutputs)
-
-
             # Go back through the layers, compute the corresponding node values and update the gradient at the same time
             for i in range(2, self.nbrLayers + 1):
                 previousOutputs = self.layers[-i - 1].outputs if i < self.nbrLayers else dataPoint.input
 
                 currentLayer = self.layers[-i]
-                nodesValues = currentLayer.CalculateHiddenLayerNodesValues(self.layers[-i + 1], nodesValues, previousOutputs)
-                # layer.UpdateGradient(nodesValues, previousOutputs)
+                nodesValues = currentLayer.UpdateGradient(self.layers[-i + 1], nodesValues, previousOutputs)
 
         for layer in self.layers:
             layer.ApplyGradient(learningRate / len(dataPoints))
@@ -107,6 +127,14 @@ class Layer:
         self.Activation = activationFunction.value.function
         self.ActivationDerivative = activationFunction.value.derivative
 
+    def ToJson(self):
+        jsonObject = {
+            "weights": self.weights,
+            "biases": self.biases
+        }
+
+        return jsonObject
+
     def SetActivationFunction(self, activationFunction):
         self.Activation = activationFunction.value.function
         self.ActivationDerivative = activationFunction.value.derivative
@@ -128,14 +156,7 @@ class Layer:
 
         return self.outputs
 
-    # def CalculateOutputLayerNodesValues(self, targets):
-    #     nodesValues = []
-    #     for nodesOut in range(self.nbrNodesOut):
-    #         nodesValues.append(CostDerivative(self.outputs[nodesOut], targets[nodesOut]) * self.ActivationDerivative(self.weightedSum, nodesOut))
-    #
-    #     return nodesValues
-
-    def CalculateHiddenLayerNodesValues(self, oldLayer, oldNodesValues, previousOutputs):
+    def UpdateGradient(self, oldLayer, oldNodesValues, previousOutputs):
         newNodeValues = []
 
         for nodesOut in range(self.nbrNodesOut):
@@ -151,13 +172,6 @@ class Layer:
                 self.gradientWeights[nodesOut][nodesIn] += previousOutputs[nodesIn] * newNodeValue
 
         return newNodeValues
-
-    # def UpdateGradient(self, nodesValues, previousOutputs):
-    #     for nodesOut in range(self.nbrNodesOut):
-    #         for nodesIn in range(self.nbrNodesIn):
-    #             self.gradientWeights[nodesOut][nodesIn] += previousOutputs[nodesIn] * nodesValues[nodesOut]
-    #
-    #         self.gradientBiases[nodesOut] += nodesValues[nodesOut]
 
     def ApplyGradient(self, learningRate):
         for nodesOut in range(self.nbrNodesOut):

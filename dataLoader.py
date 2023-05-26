@@ -1,6 +1,7 @@
 import numpy as np
 import struct
 from array import array
+import os
 
 
 # explicit function to normalize array
@@ -45,10 +46,17 @@ def ReadMnistFiles(imagesFilepath, labelsFilepath, batchSize):
     return images, labels
 
 
-def LoadPersonalDataset()
+# def LoadPersonalDataset():
+#     dir = "./data/number-generator/output/"
+#     files = os.listdir(dir)
+#     with open(dir+files[0], "rb") as image:
+#         print(struct.unpack(">IIII", image.read(16)))
+#         f = image.read(8)
+#         print(f)
 
 
 def LoadDataset(batchSize):
+    # LoadPersonalDataset()
     dataDirectory = './data/'
     training_images_filepath = dataDirectory + 'train-images.idx3-ubyte'
     training_labels_filepath = dataDirectory + 'train-labels.idx1-ubyte'
