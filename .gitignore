@@ -4,4 +4,4 @@ __pycache__
 
 dataset*.png
 
-data/number-generator/output
+data/number-generator/output/*
