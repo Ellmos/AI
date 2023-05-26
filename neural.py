@@ -11,7 +11,7 @@ class HyperParameters:
         self.initialLearningRate = 0.075
         self.learnRateDecay = 0.075
         self.batchSize = 32
-        self.epoch = 5
+        self.epoch = 20
 
 class NeuralNetwork:
     def __init__(self, layersSizes):
@@ -31,7 +31,6 @@ class NeuralNetwork:
             jsonObject["layersSizes"].append(layer.nbrNodesOut)
             jsonObject["layers"].append(layer.ToJson())
 
-        print(jsonObject)
         with open(path+".json", "w") as save:
             save.write(json.dumps(jsonObject))
 

@@ -60,8 +60,8 @@ neural.SetCostFunction(hp.costFunction)
 
 # Create dataSet
 trainDataSet, validationDataSet, testDataSet = GenerateDataSet(hp.batchSize)
-trainDataSet = trainDataSet[:100 // hp.batchSize]
-validationDataSet = validationDataSet[:100 // hp.batchSize]
+trainDataSet = trainDataSet[:10000 // hp.batchSize]
+validationDataSet = validationDataSet[:1000 // hp.batchSize]
 testDataSet = testDataSet[:1000 // hp.batchSize]
 
 
