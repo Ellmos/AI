@@ -2,24 +2,42 @@ from ActivationFunctions import ActivationFunctions
 from CostFunctions import CostFunctions
 import json
 
+import matplotlib.pyplot as plt
+from random import shuffle
+from time import time
+
+
 
 class HyperParameters:
     def __init__(self):
         self.activationFunction = ActivationFunctions.Relu
         self.outputActivationType = ActivationFunctions.Softmax
         self.costFunction = CostFunctions.CrossEntropy
-        self.initialLearningRate = 0.075
+        self.initialLearningRate = 0.025
         self.learnRateDecay = 0.075
         self.batchSize = 32
-        self.epoch = 20
+        self.epoch = 10
+
+
+def NeuralFromJson(filePath, hyperParameters):
+    with open(filePath, 'r') as file:
+        content = json.loads(file.read())
+        layersSizes = content["layersSizes"]
+        neural = NeuralNetwork(layersSizes, hyperParameters)
+
+        for (layer, layerData) in zip(neural.layers, content["layers"]):
+            layer.weights = layerData["weights"]
+            layer.biases = layerData["biases"]
+
+    return neural
 
 class NeuralNetwork:
-    def __init__(self, layersSizes):
+    def __init__(self, layersSizes, hyperParameters):
         self.nbrLayers = len(layersSizes) - 1
-        self.layers = [Layer(layersSizes[i], layersSizes[i + 1]) for i in range(self.nbrLayers)]
-        self.Cost = CostFunctions.CrossEntropy.value.function
-        self.CostDerivative = CostFunctions.CrossEntropy.value.derivative
-        self.layers[-1].SetActivationFunction(ActivationFunctions.Softmax)
+        self.layers = [Layer(layersSizes[i], layersSizes[i + 1], hyperParameters.activationFunction) for i in range(self.nbrLayers)]
+        self.layers[-1].SetActivationFunction(hyperParameters.outputActivationType)
+        self.Cost = hyperParameters.costFunction.value.function
+        self.CostDerivative = hyperParameters.costFunction.value.derivative
 
     def ToJson(self, path):
         jsonObject = {
@@ -31,9 +49,8 @@ class NeuralNetwork:
             jsonObject["layersSizes"].append(layer.nbrNodesOut)
             jsonObject["layers"].append(layer.ToJson())
 
-        with open(path+".json", "w") as save:
+        with open(f"saves/{path}.json", "w") as save:
             save.write(json.dumps(jsonObject))
-
 
     def SetActivationFunctions(self, ActivationFunction, outputActivationFunction):
         for layer in self.layers:
@@ -46,37 +63,12 @@ class NeuralNetwork:
         self.CostDerivative = CostFunction.value.derivative
 
 
-
     def CalculateOutputs(self, inputs):
         for layer in self.layers:
             inputs = layer.CalculateOutputs(inputs)
         return inputs
 
-    def Classify(self, inputs):
-        outputs = self.CalculateOutputs(inputs)
-        return outputs.index(max(outputs))
-
-
-    def DataPointCost(self, dataPoint):
-        outputs = self.CalculateOutputs(dataPoint.input)
-        return self.Cost(outputs, dataPoint.target)
-
-    def BatchCost(self, dataPoints):
-        cost = 0
-        for data in dataPoints:
-            cost += self.DataPointCost(data)
-
-        return cost / len(dataPoints)
-
-    def DataSetCost(self, dataSet):
-        cost = 0
-        for batch in dataSet:
-            cost += self.BatchCost(batch)
-
-        return cost / len(dataSet)
-
-
-    def Learn(self, dataPoints, learningRate):
+    def FeedBatch(self, dataPoints, learningRate):
         for dataPoint in dataPoints:
             self.CalculateOutputs(dataPoint.input)
 
@@ -106,6 +98,94 @@ class NeuralNetwork:
 
         for layer in self.layers:
             layer.ApplyGradient(learningRate / len(dataPoints))
+
+
+    def Learn(self, trainDataSet, validationDataSet, hp, options):
+
+        nbrBatch = len(trainDataSet)
+        printBatch = nbrBatch // 10 if nbrBatch // 10 != 0 else 1
+
+        accuracy = []
+
+        t = time()
+        print("\n------------------Learning-----------------------", end="")
+        for currentEpoch in range(hp.epoch):
+            if options["debug"]:
+                print("\n--Epoch {} out of {}--".format(currentEpoch + 1, hp.epoch))
+
+            learningRate = hp.initialLearningRate * (1 / (1 + hp.learnRateDecay * currentEpoch))
+            shuffle(trainDataSet)
+            for i in range(nbrBatch):
+                if options["debug"] and i % printBatch == 0:
+                    print("Batch {} out of {}".format(i, nbrBatch))
+
+                batch = trainDataSet[i]
+
+                self.FeedBatch(batch, learningRate)
+            accuracy.append(self.DataSetAccuracy(validationDataSet))
+
+
+        # ---------------Debug--------------
+        if options["debug"]:
+            print(time() - t)
+            print(f"\nNeural network accuracy: {accuracy[-1]}%")
+
+        # ---------------Graph--------------
+        plt.plot(range(len(accuracy)), accuracy, label="accuracy")
+        plt.title("Neural network\nDataSet:{}, BatchSize:{}, Epoch:{}, InitialRate:{}, Decay:{}".format(len(trainDataSet), hp.batchSize, hp.epoch, hp.initialLearningRate, hp.learnRateDecay))
+        plt.xlabel("Epoch")
+        plt.ylabel("Accuracy")
+        imageName = "hyperParameters/dataset{}_batch{}_epoch{}_lr{}_decay{}.png".format(len(trainDataSet), hp.batchSize, hp.epoch, hp.initialLearningRate, hp.learnRateDecay)
+
+        if options["graph"]:
+            plt.show()
+
+        if options["saveCSV"]:
+            plt.savefig(imageName)
+            path = "/home/elmos/Desktop/ai/digits/"
+            with open(path + "hyperParameters/HyperParameters.csv", "a") as file:
+                file.write("{},{},{},{},{},{}\n".format(len(trainDataSet), hp.batchSize, hp.epoch, hp.initialLearningRate, hp.learnRateDecay, f"file://{path}{imageName}"))
+
+        # ---------------Save neural--------------
+        tmp = input("Do you want to save the neural network? y/n ")
+        while tmp not in ['y', 'n']:
+            tmp = input("Do you want to save the neural network? y/n ")
+
+        if tmp == 'y':
+            name = input("Enter a name for the save: ")
+            self.ToJson(name)
+
+    def DataPointCost(self, dataPoint):
+        outputs = self.CalculateOutputs(dataPoint.input)
+        return self.Cost(outputs, dataPoint.target)
+
+    def BatchCost(self, dataPoints):
+        cost = 0
+        for data in dataPoints:
+            cost += self.DataPointCost(data)
+
+        return cost / len(dataPoints)
+
+    def DataSetCost(self, dataSet):
+        cost = 0
+        for batch in dataSet:
+            cost += self.BatchCost(batch)
+
+        return cost / len(dataSet)
+
+
+    def DataSetAccuracy(self, dataSet):
+        good = 0
+        for data in dataSet:
+            if self.Classify(data.input) == data.target.index(1):
+                good += 1
+        return good * 100 / len(dataSet)
+
+    def Classify(self, inputs):
+        outputs = self.CalculateOutputs(inputs)
+        return outputs.index(max(outputs))
+
+
 
 
 class Layer:

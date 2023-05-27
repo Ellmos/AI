@@ -1,5 +1,4 @@
-import time
-from math import sqrt, exp, isnan
+from math import sqrt, exp
 from enum import Enum
 from dataclasses import dataclass
 import numpy as np
