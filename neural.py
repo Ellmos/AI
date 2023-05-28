@@ -16,7 +16,7 @@ class HyperParameters:
         self.initialLearningRate = 0.025
         self.learnRateDecay = 0.075
         self.batchSize = 32
-        self.epoch = 10
+        self.epoch = 50
 
 
 def NeuralFromJson(filePath, hyperParameters):
@@ -105,7 +105,8 @@ class NeuralNetwork:
         nbrBatch = len(trainDataSet)
         printBatch = nbrBatch // 10 if nbrBatch // 10 != 0 else 1
 
-        accuracy = []
+        accuracyTrain = []
+        accuracyValidation = []
 
         t = time()
         print("\n------------------Learning-----------------------", end="")
@@ -122,19 +123,24 @@ class NeuralNetwork:
                 batch = trainDataSet[i]
 
                 self.FeedBatch(batch, learningRate)
-            accuracy.append(self.DataSetAccuracy(validationDataSet))
+
+            accuracyTrain.append(self.DataSetAccuracy(trainDataSet))
+            accuracyValidation.append(self.BatchAccuracy(validationDataSet))
 
 
         # ---------------Debug--------------
         if options["debug"]:
             print(time() - t)
-            print(f"\nNeural network accuracy: {accuracy[-1]}%")
+            print(f"\nNeural network accuracy on trainDataSet: {accuracyTrain[-1]}%")
+            print(f"Neural network accuracy on validationDataSet: {accuracyValidation[-1]}%")
 
         # ---------------Graph--------------
-        plt.plot(range(len(accuracy)), accuracy, label="accuracy")
+        plt.plot(range(len(accuracyTrain)), accuracyTrain, label="train")
+        plt.plot(range(len(accuracyValidation)), accuracyValidation, label="validation")
         plt.title("Neural network\nDataSet:{}, BatchSize:{}, Epoch:{}, InitialRate:{}, Decay:{}".format(len(trainDataSet), hp.batchSize, hp.epoch, hp.initialLearningRate, hp.learnRateDecay))
         plt.xlabel("Epoch")
         plt.ylabel("Accuracy")
+        plt.legend(loc="upper left")
         imageName = "hyperParameters/dataset{}_batch{}_epoch{}_lr{}_decay{}.png".format(len(trainDataSet), hp.batchSize, hp.epoch, hp.initialLearningRate, hp.learnRateDecay)
 
         if options["graph"]:
@@ -174,12 +180,18 @@ class NeuralNetwork:
         return cost / len(dataSet)
 
 
-    def DataSetAccuracy(self, dataSet):
-        good = 0
-        for data in dataSet:
+    def BatchAccuracy(self, dataPoints):
+        nbrGood = 0
+        for data in dataPoints:
             if self.Classify(data.input) == data.target.index(1):
-                good += 1
-        return good * 100 / len(dataSet)
+                nbrGood += 1
+        return nbrGood * 100 / len(dataPoints)
+
+    def DataSetAccuracy(self, dataSet):
+        averageAccuracy = 0
+        for batch in dataSet:
+            averageAccuracy += self.BatchAccuracy(batch)
+        return averageAccuracy / len(dataSet)
 
     def Classify(self, inputs):
         outputs = self.CalculateOutputs(inputs)

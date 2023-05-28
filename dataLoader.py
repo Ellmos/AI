@@ -40,10 +40,14 @@ def ReadMnistFiles(imagesFilepath, labelsFilepath, batchSize):
     if batchSize == 0:
         return images, labels
 
+    split = int(len(labels) * 0.83)
+    (x_validation, y_validation) = (images[split:], labels[split:])
+
+
     batchNumber = len(images) / batchSize
     images = np.array_split(np.array(images), batchNumber)
     labels = np.array_split(np.array(labels), batchNumber)
-    return images, labels
+    return (images, labels), (x_validation, y_validation)
 
 
 # def LoadPersonalDataset():
@@ -63,11 +67,11 @@ def LoadDataset(batchSize):
     test_images_filepath = dataDirectory + 't10k-images.idx3-ubyte'
     test_labels_filepath = dataDirectory + 't10k-labels.idx1-ubyte'
 
-    x_train, y_train = ReadMnistFiles(training_images_filepath, training_labels_filepath, batchSize)
+    (x_train, y_train), (x_validation, y_validation) = ReadMnistFiles(training_images_filepath, training_labels_filepath, batchSize)
     x_test, y_test = ReadMnistFiles(test_images_filepath, test_labels_filepath, 0)
 
     if batchSize == 0:
         return ([x_train], [y_train]), (x_test, y_test)
 
-    return (x_train, y_train), (x_test, y_test)
+    return (x_train, y_train), (x_validation, y_validation), (x_test, y_test)
 

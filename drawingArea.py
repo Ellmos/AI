@@ -1,0 +1,71 @@
+import pygame
+import numpy as np
+from PIL import Image
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the drawing area
+size = 400
+screen = pygame.display.set_mode((size, size))
+pygame.display.set_caption("Digit Recognition")
+
+# Set up colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+
+# Set up the drawing variables
+drawing = False
+last_pos = None
+
+# Game loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:  # Left mouse button
+                drawing = True
+                last_pos = pygame.mouse.get_pos()
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                drawing = False
+        elif event.type == pygame.MOUSEMOTION:
+            if drawing:
+                current_pos = pygame.mouse.get_pos()
+                pygame.draw.line(screen, WHITE, last_pos, current_pos, 15)
+                last_pos = current_pos
+
+    # Update the screen
+    pygame.display.flip()
+
+# Convert the drawn image to 28x28 pixels
+scaled_surface = pygame.transform.smoothscale(screen, (28, 28))
+drawn_image = pygame.surfarray.array2d(scaled_surface)
+
+# Create a new PIL Image with proper orientation
+pil_image = Image.fromarray(drawn_image)
+pil_image = pil_image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+pil_image = pil_image.rotate(-90)
+
+
+# Adjust the aspect ratio to fill a 28x28 image
+new_image = Image.new("L", (28, 28), color=255)
+image_width, image_height = pil_image.size
+if image_width > image_height:
+    new_height = int(28 / image_width * image_height)
+    resized_image = pil_image.resize((28, new_height))
+    top_margin = (28 - new_height) // 2
+    new_image.paste(resized_image, (0, top_margin))
+else:
+    new_width = int(28 / image_height * image_width)
+    resized_image = pil_image.resize((new_width, 28))
+    left_margin = (28 - new_width) // 2
+    new_image.paste(resized_image, (left_margin, 0))
+
+# Save the image
+new_image.save("drawn_digit.png")
+
+# Quit the program
+pygame.quit()
