@@ -3,5 +3,7 @@ __pycache__
 .idea/
 
 dataset*.png
-
 data/number-generator/output/*
+data/number-generator/*.bytes
+
+drawn_digit.png

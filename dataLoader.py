@@ -1,8 +1,9 @@
-import numpy as np
 import struct
 from array import array
-import os
+from time import time
 
+from PIL import Image
+import numpy as np
 
 # explicit function to normalize array
 def Normalize(arr):
@@ -50,17 +51,38 @@ def ReadMnistFiles(imagesFilepath, labelsFilepath, batchSize):
     return (images, labels), (x_validation, y_validation)
 
 
-# def LoadPersonalDataset():
-#     dir = "./data/number-generator/output/"
-#     files = os.listdir(dir)
-#     with open(dir+files[0], "rb") as image:
-#         print(struct.unpack(">IIII", image.read(16)))
-#         f = image.read(8)
-#         print(f)
+def LoadPersonalDataset(batchSize):
+    dirName = "./data/number-generator/"
+
+    images = []
+    imageFile = open(dirName + "images.bytes", "rb")
+    labelFile = open(dirName + "labels.bytes", "rb")
+    iteration = int.from_bytes(imageFile.read(8), "little")
+    labelFile.read(8) # the first 8 bytes are the iteration
+
+    for i in range(iteration):
+        imgBytes = imageFile.read(8 * 784)
+        images.append(np.frombuffer(imgBytes))
+
+
+    labels = [int.from_bytes(labelFile.read(1), "little") for _ in range(iteration)]
+
+
+    if batchSize == 0:
+        return images, labels
+
+
+    batchNumber = len(images) / batchSize
+    images = np.array_split(np.array(images), batchNumber)
+    labels = np.array_split(np.array(labels), batchNumber)
+
+    return images, labels
+
 
 
 def LoadDataset(batchSize):
-    # LoadPersonalDataset()
+    LoadPersonalDataset(batchSize)
+
     dataDirectory = './data/'
     training_images_filepath = dataDirectory + 'train-images.idx3-ubyte'
     training_labels_filepath = dataDirectory + 'train-labels.idx1-ubyte'
