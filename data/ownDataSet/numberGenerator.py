@@ -1,8 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
-import shutil
 import os
 import random
-import hashlib
 import sys
 import numpy as np
 
@@ -22,9 +20,15 @@ for f in dir_list:
 
 lenfont = len(fonts)
 
-def create_image(iteration):
-    imageFile = open("./images.bytes", "wb")
-    labelFile = open("./labels.bytes", "wb")
+def create_image(iteration, trainDataSet):
+    if trainDataSet:
+        imageFile = open("./ownTrainImages.bytes", "wb")
+        labelFile = open("./ownTrainLabels.bytes", "wb")
+    else:
+        imageFile = open("./ownTestImages.bytes", "wb")
+        labelFile = open("./ownTestLabels.bytes", "wb")
+
+
     imageFile.write(iteration.to_bytes(8, "little"))
     labelFile.write(iteration.to_bytes(8, "little"))
 
@@ -82,8 +86,5 @@ def create_image(iteration):
     labelFile.close()
 
 
-if __name__ == "__main__":
-    shutil.rmtree("./output")
-    os.mkdir("./output")
-
-    create_image(int(sys.argv[1]))
+create_image(int(sys.argv[1]), True)
+create_image(int(sys.argv[2]), False)

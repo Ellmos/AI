@@ -1,24 +1,16 @@
 import struct
 from array import array
-from time import time
-
-from PIL import Image
 import numpy as np
-
-# explicit function to normalize array
-def Normalize(arr):
-    norm_arr = []
-    diff_arr = max(arr) - min(arr)
-    for i in arr:
-        temp = ((i - min(arr)) / diff_arr) + 1
-        norm_arr.append(temp)
-    return norm_arr
+from time import time
+from dataclasses import dataclass
+from random import shuffle
 
 
-def ReadMnistFiles(imagesFilepath, labelsFilepath, batchSize):
+
+def ReadMnistFiles(imagesPath, labelsPath):
     labels = []
     # Read labels file
-    with open(labelsFilepath, 'rb') as file:
+    with open(labelsPath, 'rb') as file:
         magic, size = struct.unpack(">II", file.read(8))
         if magic != 2049:
             raise ValueError('Magic number mismatch, expected 2049, got {}'.format(magic))
@@ -26,7 +18,7 @@ def ReadMnistFiles(imagesFilepath, labelsFilepath, batchSize):
 
 
     # Read images file
-    with open(imagesFilepath, 'rb') as file:
+    with open(imagesPath, 'rb') as file:
         magic, size, rows, cols = struct.unpack(">IIII", file.read(16))
         if magic != 2051:
             raise ValueError('Magic number mismatch, expected 2051, got {}'.format(magic))
@@ -38,62 +30,98 @@ def ReadMnistFiles(imagesFilepath, labelsFilepath, batchSize):
         img = img * (1.0/img.max())
         images[i] = img
 
-    if batchSize == 0:
-        return images, labels
-
-    split = int(len(labels) * 0.83)
-    (x_validation, y_validation) = (images[split:], labels[split:])
+    return np.array(images), np.array(labels)
 
 
-    batchNumber = len(images) / batchSize
-    images = np.array_split(np.array(images), batchNumber)
-    labels = np.array_split(np.array(labels), batchNumber)
-    return (images, labels), (x_validation, y_validation)
-
-
-def LoadPersonalDataset(batchSize):
-    dirName = "./data/number-generator/"
-
+def ReadOwnFiles(imagesPath, labelsPath):
     images = []
-    imageFile = open(dirName + "images.bytes", "rb")
-    labelFile = open(dirName + "labels.bytes", "rb")
+    imageFile = open(imagesPath, "rb")
+    labelFile = open(labelsPath, "rb")
     iteration = int.from_bytes(imageFile.read(8), "little")
-    labelFile.read(8) # the first 8 bytes are the iteration
+    labelFile.read(8) # read the first 8 bytes to skip the iteration int
 
     for i in range(iteration):
         imgBytes = imageFile.read(8 * 784)
         images.append(np.frombuffer(imgBytes))
 
-
     labels = [int.from_bytes(labelFile.read(1), "little") for _ in range(iteration)]
 
+    return np.array(images), np.array(labels)
+
+
+
+def ReadDataSetFiles():
+    # --------------Load Mnist DataSet---------------------
+    directory = './data/mnist/'
+    training_images_path = directory + 'train-images.idx3-ubyte'
+    training_labels_path = directory + 'train-labels.idx1-ubyte'
+    test_images_path = directory + 't10k-images.idx3-ubyte'
+    test_labels_path = directory + 't10k-labels.idx1-ubyte'
+
+    mnistTrainImages, mnistTrainLabels = ReadMnistFiles(training_images_path, training_labels_path)
+    mnistTestImages, mnistTestLabels = ReadMnistFiles(test_images_path, test_labels_path)
+
+
+    # --------------Load Own DataSet---------------------
+    directory = './data/ownDataSet/'
+    training_images_path = directory + 'ownTrainImages.bytes'
+    training_labels_path = directory + 'ownTrainLabels.bytes'
+    test_images_path = directory + 'ownTestImages.bytes'
+    test_labels_path = directory + 'ownTestLabels.bytes'
+    ownTrainImages, ownTrainLabels = ReadOwnFiles(training_images_path, training_labels_path)
+    ownTestImages, ownTestLabels = ReadOwnFiles(test_images_path, test_labels_path)
+
+
+    # --------------Join DataSets---------------------
+    trainImages = np.concatenate((mnistTrainImages, ownTrainImages))
+    trainLabels = np.concatenate((mnistTrainLabels, ownTrainLabels))
+
+    testImages = np.concatenate((mnistTestImages, ownTestImages))
+    testLabels = np.concatenate((mnistTestLabels, ownTestLabels))
+
+    return (trainImages, trainLabels), (testImages, testLabels)
+
+
+
+
+@dataclass
+class Data:
+    input: list
+    target: list
+
+
+
+def GenerateDataSet(batchSize):
+    print("--------------Creating Dataset-------------------")
+    t = time()
+    (trainImages, trainLabels), (testImages, testLabels) = ReadDataSetFiles()
 
     if batchSize == 0:
-        return images, labels
+        nbrBatch = 1
+    else:
+        nbrBatch = len(trainImages) // batchSize
 
 
-    batchNumber = len(images) / batchSize
-    images = np.array_split(np.array(images), batchNumber)
-    labels = np.array_split(np.array(labels), batchNumber)
+    trainDataSet = []
+    for i in range(0, nbrBatch):
+        newBatch = []
+        for j in range(batchSize):
+            image = trainImages[i * batchSize + j]
+            label = trainLabels[i * batchSize + j]
+            output = [0 for _ in range(10)]
+            output[label] = 1
+            newBatch.append(Data(image, output))
+        trainDataSet.append(newBatch)
 
-    return images, labels
 
+    testDataSet = []
+    for i in range(len(testImages)):
+        output = [0 for _ in range(10)]
+        y = testLabels[i]
+        output[y] = 1
+        testDataSet.append(Data(testImages[i], output))
 
+    shuffle(trainDataSet)
 
-def LoadDataset(batchSize):
-    LoadPersonalDataset(batchSize)
-
-    dataDirectory = './data/'
-    training_images_filepath = dataDirectory + 'train-images.idx3-ubyte'
-    training_labels_filepath = dataDirectory + 'train-labels.idx1-ubyte'
-    test_images_filepath = dataDirectory + 't10k-images.idx3-ubyte'
-    test_labels_filepath = dataDirectory + 't10k-labels.idx1-ubyte'
-
-    (x_train, y_train), (x_validation, y_validation) = ReadMnistFiles(training_images_filepath, training_labels_filepath, batchSize)
-    x_test, y_test = ReadMnistFiles(test_images_filepath, test_labels_filepath, 0)
-
-    if batchSize == 0:
-        return ([x_train], [y_train]), (x_test, y_test)
-
-    return (x_train, y_train), (x_validation, y_validation), (x_test, y_test)
-
+    print("DatSet created in", time() - t, "seconds")
+    return trainDataSet, [testDataSet]

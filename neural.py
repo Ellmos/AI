@@ -1,22 +1,9 @@
 from ActivationFunctions import ActivationFunctions
-from CostFunctions import CostFunctions
 import json
 
 import matplotlib.pyplot as plt
 from random import shuffle
 from time import time
-
-
-
-class HyperParameters:
-    def __init__(self):
-        self.activationFunction = ActivationFunctions.Relu
-        self.outputActivationType = ActivationFunctions.Softmax
-        self.costFunction = CostFunctions.CrossEntropy
-        self.initialLearningRate = 0.025
-        self.learnRateDecay = 0.075
-        self.batchSize = 32
-        self.epoch = 50
 
 
 def NeuralFromJson(filePath, hyperParameters):
@@ -68,8 +55,8 @@ class NeuralNetwork:
             inputs = layer.CalculateOutputs(inputs)
         return inputs
 
-    def FeedBatch(self, dataPoints, learningRate):
-        for dataPoint in dataPoints:
+    def FeedBatch(self, batch, learningRate):
+        for dataPoint in batch:
             self.CalculateOutputs(dataPoint.input)
 
 
@@ -97,10 +84,11 @@ class NeuralNetwork:
                 nodesValues = currentLayer.UpdateGradient(self.layers[-i + 1], nodesValues, previousOutputs)
 
         for layer in self.layers:
-            layer.ApplyGradient(learningRate / len(dataPoints))
+            layer.ApplyGradient(learningRate / len(batch))
 
 
-    def Learn(self, trainDataSet, validationDataSet, hp, options):
+
+    def Learn(self, trainDataSet, testDataSet, hp, options):
 
         nbrBatch = len(trainDataSet)
         printBatch = nbrBatch // 10 if nbrBatch // 10 != 0 else 1
@@ -125,7 +113,7 @@ class NeuralNetwork:
                 self.FeedBatch(batch, learningRate)
 
             accuracyTrain.append(self.DataSetAccuracy(trainDataSet))
-            accuracyValidation.append(self.BatchAccuracy(validationDataSet))
+            accuracyValidation.append(self.DataSetAccuracy(testDataSet))
 
 
         # ---------------Debug--------------
@@ -165,27 +153,25 @@ class NeuralNetwork:
         outputs = self.CalculateOutputs(dataPoint.input)
         return self.Cost(outputs, dataPoint.target)
 
-    def BatchCost(self, dataPoints):
+    def BatchCost(self, batch):
         cost = 0
-        for data in dataPoints:
-            cost += self.DataPointCost(data)
-
-        return cost / len(dataPoints)
+        for dataPoint in batch:
+            cost += self.DataPointCost(dataPoint)
+        return cost / len(batch)
 
     def DataSetCost(self, dataSet):
         cost = 0
         for batch in dataSet:
             cost += self.BatchCost(batch)
-
         return cost / len(dataSet)
 
 
-    def BatchAccuracy(self, dataPoints):
+    def BatchAccuracy(self, batch):
         nbrGood = 0
-        for data in dataPoints:
-            if self.Classify(data.input) == data.target.index(1):
+        for dataPoint in batch:
+            if self.Classify(dataPoint.input) == dataPoint.target.index(1):
                 nbrGood += 1
-        return nbrGood * 100 / len(dataPoints)
+        return nbrGood * 100 / len(batch)
 
     def DataSetAccuracy(self, dataSet):
         averageAccuracy = 0
