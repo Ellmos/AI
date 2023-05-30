@@ -1,4 +1,5 @@
 from neural import *
+from main import HyperParameters
 
 import pygame
 from PIL import Image
