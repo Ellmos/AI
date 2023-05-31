@@ -28,6 +28,7 @@ def ReadMnistFiles(imagesPath, labelsPath):
     for i in range(size):
         img = np.array(image_data[i * rows * cols:(i + 1) * rows * cols])
         img = img * (1.0/img.max())
+        img = img.reshape(784, 1)
         images[i] = img
 
     return np.array(images), np.array(labels)
@@ -42,7 +43,7 @@ def ReadOwnFiles(imagesPath, labelsPath):
 
     for i in range(iteration):
         imgBytes = imageFile.read(8 * 784)
-        images.append(np.frombuffer(imgBytes))
+        images.append(np.frombuffer(imgBytes).reshape(784, 1))
 
     labels = [int.from_bytes(labelFile.read(1), "little") for _ in range(iteration)]
 

@@ -4,25 +4,11 @@ from dataclasses import dataclass
 import numpy as np
 
 
-
-# --------------------------LOSS FUNCTIONS------------------------------- #
-def Cost(outputValue, targetValue):
-    diff = targetValue - outputValue
-    return diff * diff
-
-
-def CostDerivative(outputValue, targetValue):
-    return outputValue - targetValue
-
-
-
-
 # --------------------------ACTIVATION FUNCTIONS------------------------------- #
-def Relu(inputs, index):
-    return max(0, inputs[index])
+def Relu(weightedSum):
+    return weightedSum * (weightedSum > 0)
 def ReluDerivative(inputs, index):
     return 0 if inputs[index] < 0 else 1
-
 
 
 alpha = 0.05
@@ -40,30 +26,31 @@ def SigmoidDerivative(inputs, index):
     return activation * (1 - activation)
 
 
-def Softmax(inputs, index):
-    Normalize(inputs)
-    sumExp = 0
-    for input in inputs:
-        sumExp += exp(input)
-    return exp(inputs[index]) / sumExp
-def SoftmaxDerivative(inputs, index):
-    Normalize(inputs)
-    sumExp = 0
-    for input in inputs:
-        sumExp += exp(input)
+vectExp = np.vectorize(exp)
+def Softmax(weightedSum):
+    norm = weightedSum - weightedSum.max()
+    exps = vectExp(norm)
+    sumExp = np.sum(exps)
+    return exps / sumExp
+def SoftmaxDerivative(weightedSum):
+    norm = weightedSum - weightedSum.max()
+    exps = vectExp(norm)
 
-    tmp = exp(inputs[index])
-    return (tmp*sumExp - tmp*tmp) / (sumExp*sumExp)
+    sumExp = np.sum(exps)
+
+    return [[(i*sumExp - i*i) / (sumExp*sumExp)] for i in exps]
+    # tmp = exp(inputs[index])
+    # return (tmp*sumExp - tmp*tmp) / (sumExp*sumExp)
 
 
 def Normalize(inputs):
     m = max(inputs)
     for i in range(len(inputs)):
         inputs[i] -= m
+    return inputs
 
 def Empty(inputs, index):
     return inputs[index]
-
 
 
 
@@ -71,7 +58,7 @@ def Empty(inputs, index):
 def HeInitialization(nbrNodesIn, nbrNodesOut):
     std = sqrt(2.0 / nbrNodesIn)
     numbers = np.random.randn(nbrNodesOut, nbrNodesIn)
-    return (numbers * std).tolist()
+    return numbers * std
 
 
 
@@ -82,7 +69,7 @@ def XavierInitialization(nbrNodesIn, nbrNodesOut):
     numbers = np.random.rand(nbrNodesOut, nbrNodesIn)
     scaled = lower + numbers * (upper - lower)
 
-    return scaled.tolist()
+    return scaled
 
 
 @dataclass
@@ -96,7 +83,7 @@ class ActivationFunctions(Enum):
     LeakyRelu = ActivationFunction(LeakyRelu, LeakyReluDerivative, HeInitialization)
     Sigmoid = ActivationFunction(Sigmoid, SigmoidDerivative, XavierInitialization)
     Softmax = ActivationFunction(Softmax, SoftmaxDerivative, XavierInitialization)
-    Empty = ActivationFunction(Empty, Empty, XavierInitialization)
+    Empty = ActivationFunction(Empty, Empty, HeInitialization)
 
 
 

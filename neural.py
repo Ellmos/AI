@@ -1,5 +1,7 @@
-from ActivationFunctions import ActivationFunctions
+from ActivationFunctions import ActivationFunctions, Normalize
 import json
+from math import exp
+import numpy as np
 
 import matplotlib.pyplot as plt
 from random import shuffle
@@ -53,18 +55,22 @@ class NeuralNetwork:
     def CalculateOutputs(self, inputs):
         for layer in self.layers:
             inputs = layer.CalculateOutputs(inputs)
+
         return inputs
 
     def FeedBatch(self, batch, learningRate):
         for dataPoint in batch:
             self.CalculateOutputs(dataPoint.input)
 
-
             outputLayer = self.layers[-1]
             previousOutputs = self.layers[-2].outputs if self.nbrLayers >= 2 else dataPoint.input
 
             # Compute the nodes values of the output layer and update its gradients
             nodesValues = []
+            if outputLayer.ActivationDerivative == ActivationFunctions.Softmax.value.derivative:
+                activationDerivatives = outputLayer.ActivationDerivative(outputLayer.weightedSum)
+                costDerivatives = self.CostDerivative(outputLayer.outputs, dataPoint.target)
+
             for nodesOut in range(outputLayer.nbrNodesOut):
                 activationDerivative = outputLayer.ActivationDerivative(outputLayer.weightedSum, nodesOut)
                 costDerivative = self.CostDerivative(outputLayer.outputs[nodesOut], dataPoint.target[nodesOut])
@@ -104,11 +110,9 @@ class NeuralNetwork:
 
             learningRate = hp.initialLearningRate * (1 / (1 + hp.learnRateDecay * currentEpoch))
             shuffle(trainDataSet)
-            for i in range(nbrBatch):
+            for i, batch in enumerate(trainDataSet):
                 if options["debug"] and i % printBatch == 0:
                     print("Batch {} out of {}".format(i, nbrBatch))
-
-                batch = trainDataSet[i]
 
                 self.FeedBatch(batch, learningRate)
 
@@ -118,7 +122,7 @@ class NeuralNetwork:
 
         # ---------------Debug--------------
         if options["debug"]:
-            print(time() - t)
+            print(f"\nTime to precess whole DataSet: {time() - t} seconds")
             print(f"\nNeural network accuracy on trainDataSet: {accuracyTrain[-1]}%")
             print(f"Neural network accuracy on validationDataSet: {accuracyValidation[-1]}%")
 
@@ -141,7 +145,7 @@ class NeuralNetwork:
                 file.write("{},{},{},{},{},{}\n".format(len(trainDataSet), hp.batchSize, hp.epoch, hp.initialLearningRate, hp.learnRateDecay, f"file://{path}{imageName}"))
 
         # ---------------Save neural--------------
-        tmp = input("Do you want to save the neural network? y/n ")
+        tmp = input("\nDo you want to save the neural network? y/n ")
         while tmp not in ['y', 'n']:
             tmp = input("Do you want to save the neural network? y/n ")
 
@@ -192,14 +196,15 @@ class Layer:
         self.nbrNodesOut = nbrNodesOut
 
         self.weights = activationFunction.value.weightsInitialization(nbrNodesIn, nbrNodesOut)
-        self.biases = [0 for _ in range(nbrNodesOut)]
+        self.biases = np.zeros((nbrNodesOut, 1))
+
 
         self.gradientWeights = [[0 for _ in range(nbrNodesIn)] for _ in range(nbrNodesOut)]
-        self.gradientBiases = [0 for _ in range(nbrNodesOut)]
+        self.gradientBiases = np.zeros((nbrNodesOut, 1))
 
         # Some values are computed during forward pass and stored here for the backpropagation
-        self.weightedSum = []
-        self.outputs = []
+        self.weightedSum = np.zeros((nbrNodesOut, 1))
+        self.outputs = np.zeros((nbrNodesOut, 1))
 
         self.Activation = activationFunction.value.function
         self.ActivationDerivative = activationFunction.value.derivative
@@ -218,18 +223,17 @@ class Layer:
         self.weights = activationFunction.value.weightsInitialization(self.nbrNodesIn, self.nbrNodesOut)
 
     def CalculateOutputs(self, inputs):
-        self.weightedSum = []
-        self.outputs = []
-        for nodesOut in range(self.nbrNodesOut):
-            iOutput = self.biases[nodesOut]
-            for nodesIn in range(self.nbrNodesIn):
-                iOutput += inputs[nodesIn] * self.weights[nodesOut][nodesIn]
+        # for nodesOut in range(self.nbrNodesOut):
+        #     iOutput = self.biases[nodesOut]
+        #     for nodesIn in range(self.nbrNodesIn):
+        #         iOutput += inputs[nodesIn] * self.weights[nodesOut][nodesIn]
+        #
+        #     self.weightedSum[nodesOut] = iOutput
 
-            self.weightedSum.append(iOutput)
+        self.weightedSum = np.dot(self.weights, inputs)
 
         # Run every weightedSum through the activation function
-        for i in range(self.nbrNodesOut):
-            self.outputs.append(self.Activation(self.weightedSum, i))
+        self.outputs = self.Activation(self.weightedSum)
 
         return self.outputs
 

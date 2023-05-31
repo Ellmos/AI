@@ -10,7 +10,6 @@ def MeanSquare(outputValues, targetValues):
         diff = target - output
         cost += diff * diff
     return cost * 0.5
-
 def MeanSquareDerivative(outputValue, targetValue):
     return outputValue - targetValue
 
@@ -31,13 +30,11 @@ def CrossEntropy(outputValues, targetValues):
             cost += tmp
 
     return cost
-
-
-def CrossEntropyDerivative(outputValue, targetValue):
-    if outputValue == 0 or outputValue == 1:
+def CrossEntropyDerivative(outputValues, targetValues):
+    if outputValues == 0 or outputValues == 1:
         return 0
 
-    return (-outputValue + targetValue) / (outputValue * (outputValue - 1))
+    return (-outputValues + targetValues) / (outputValues * (outputValues - 1))
 
 
 @dataclass
