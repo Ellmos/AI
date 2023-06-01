@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from random import shuffle
 from time import time
 
+from discordwebhook import Discord
+
+discord = Discord(url="")
 
 def NeuralFromJson(filePath, hyperParameters):
     with open(filePath, 'r') as file:
@@ -105,8 +108,9 @@ class NeuralNetwork:
         t = time()
         print("\n------------------Learning-----------------------", end="")
         for currentEpoch in range(hp.epoch):
+            discord.post(content=f"--Epoch {currentEpoch + 1} out of {hp.epoch}--")
             if options["debug"]:
-                print("\n--Epoch {} out of {}--".format(currentEpoch + 1, hp.epoch))
+                print(f"\n--Epoch {currentEpoch + 1} out of {hp.epoch}--")
 
             learningRate = hp.initialLearningRate * (1 / (1 + hp.learnRateDecay * currentEpoch))
             shuffle(trainDataSet)
@@ -148,6 +152,7 @@ class NeuralNetwork:
 
         # ---------------Save neural--------------
         self.ToJson("trainOnBanquise")
+        discord.post(content=f"--Done--")
 
     def DataPointCost(self, dataPoint):
         outputs = self.CalculateOutputs(dataPoint.input)
