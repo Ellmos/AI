@@ -1,5 +1,6 @@
 from ActivationFunctions import ActivationFunctions
 import json
+import os.path
 
 import matplotlib.pyplot as plt
 from random import shuffle
@@ -26,7 +27,7 @@ class NeuralNetwork:
         self.Cost = hyperParameters.costFunction.value.function
         self.CostDerivative = hyperParameters.costFunction.value.derivative
 
-    def ToJson(self, path):
+    def ToJson(self, saveName):
         jsonObject = {
             "layersSizes": [self.layers[0].nbrNodesIn],
             "layers": []
@@ -36,7 +37,12 @@ class NeuralNetwork:
             jsonObject["layersSizes"].append(layer.nbrNodesOut)
             jsonObject["layers"].append(layer.ToJson())
 
-        with open(f"saves/{path}.json", "w") as save:
+        path = f"saves/{saveName}.json"
+        while os.path.isfile(path):
+            saveName += "_"
+            path = f"saves/{saveName}.json"
+
+        with open(path, "w") as save:
             save.write(json.dumps(jsonObject))
 
     def SetActivationFunctions(self, ActivationFunction, outputActivationFunction):
@@ -141,13 +147,7 @@ class NeuralNetwork:
                 file.write("{},{},{},{},{},{}\n".format(len(trainDataSet), hp.batchSize, hp.epoch, hp.initialLearningRate, hp.learnRateDecay, f"file://{path}{imageName}"))
 
         # ---------------Save neural--------------
-        tmp = input("Do you want to save the neural network? y/n ")
-        while tmp not in ['y', 'n']:
-            tmp = input("Do you want to save the neural network? y/n ")
-
-        if tmp == 'y':
-            name = input("Enter a name for the save: ")
-            self.ToJson(name)
+        self.ToJson("trainOnBanquise")
 
     def DataPointCost(self, dataPoint):
         outputs = self.CalculateOutputs(dataPoint.input)
