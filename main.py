@@ -17,10 +17,11 @@ class HyperParameters:
 if __name__ == "__main__":
     # Create neural network
     hp = HyperParameters()
-    neural = NeuralNetwork([784, 30, 10], hp)
+    neural = NeuralNetwork([784, 300, 10], hp)
 
     # Create dataSet
     trainDataSet, testDataSet = GenerateDataSet(hp.batchSize)
+    print(neural.DataSetAccuracy(testDataSet))
 
     # trainDataSet = trainDataSet[:10000 // hp.batchSize]
     # testDataSet = testDataSet[:10000]

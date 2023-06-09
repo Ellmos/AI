@@ -5,6 +5,7 @@ import os.path
 import matplotlib.pyplot as plt
 from random import shuffle
 from time import time
+import numpy as np
 
 from discordwebhook import Discord
 
@@ -16,9 +17,14 @@ def NeuralFromJson(filePath, hyperParameters):
         layersSizes = content["layersSizes"]
         neural = NeuralNetwork(layersSizes, hyperParameters)
 
+
         for (layer, layerData) in zip(neural.layers, content["layers"]):
             layer.weights = layerData["weights"]
             layer.biases = layerData["biases"]
+
+        # for i in range(len(neural.layers)):
+        #     neural.layers[i].weights = [i.tolist() for i in np.array_split(content["connections"][i]["weights"], neural.layers[i].nbrNodesOut)]
+        #     neural.layers[i].biases = content["connections"][i]["biases"]
 
     return neural
 
