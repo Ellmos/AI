@@ -34,9 +34,19 @@ def RunImage():
         new_image.paste(resized_image, (left_margin, 0))
 
     # Save the image
+    # new_image.save('C:\\Users\\rdoul\\Desktop\\AI\\CSharp\\images\\1.png', 'PNG')
+
     pixels = np.array(pil_image.getdata())
-    pixels = pixels * (1.0 / pixels.max())
-    print(neural.Classify(pixels))
+    pixels = (pixels * (1.0 / pixels.max())).tolist()
+
+    #with open("C:\\Users\\rdoul\\Desktop\\AI\\CSharp\\images\\9.txt", "w") as file:
+    #    for i in pixels:
+    #        file.write(str(i) + "\n")
+    outputs = neural.CalculateOutputs(pixels)
+    for i in range(len(outputs)):
+        print(f"{i}: {round(outputs[i] * 100, 3)}%")
+    print(neural.Classify(pixels), "\n\n\n\n\n")
+
 
 
 
