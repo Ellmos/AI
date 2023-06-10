@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from random import shuffle
 
 
-
 def ReadMnistFiles(imagesPath, labelsPath):
     labels = []
     # Read labels file
@@ -15,7 +14,6 @@ def ReadMnistFiles(imagesPath, labelsPath):
         if magic != 2049:
             raise ValueError('Magic number mismatch, expected 2049, got {}'.format(magic))
         labels = array("B", file.read())
-
 
     # Read images file
     with open(imagesPath, 'rb') as file:
@@ -27,7 +25,7 @@ def ReadMnistFiles(imagesPath, labelsPath):
     images = [[]] * size
     for i in range(size):
         img = np.array(image_data[i * rows * cols:(i + 1) * rows * cols])
-        img = img * (1.0/img.max())
+        img = img * (1.0 / img.max())
         images[i] = img
 
     return np.array(images), np.array(labels)
@@ -38,7 +36,7 @@ def ReadOwnFiles(imagesPath, labelsPath):
     imageFile = open(imagesPath, "rb")
     labelFile = open(labelsPath, "rb")
     iteration = int.from_bytes(imageFile.read(8), "little")
-    labelFile.read(8) # read the first 8 bytes to skip the iteration int
+    labelFile.read(8)  # the iteration value is also written at the first 8 bytes of the labelFile and can be skipped
 
     for i in range(iteration):
         imgBytes = imageFile.read(8 * 784)
@@ -47,7 +45,6 @@ def ReadOwnFiles(imagesPath, labelsPath):
     labels = [int.from_bytes(labelFile.read(1), "little") for _ in range(iteration)]
 
     return np.array(images), np.array(labels)
-
 
 
 def ReadDataSetFiles():
@@ -61,7 +58,6 @@ def ReadDataSetFiles():
     mnistTrainImages, mnistTrainLabels = ReadMnistFiles(training_images_path, training_labels_path)
     mnistTestImages, mnistTestLabels = ReadMnistFiles(test_images_path, test_labels_path)
 
-
     # --------------Load Own DataSet---------------------
     directory = './data/ownDataSet/'
     training_images_path = directory + 'ownTrainImages.bytes'
@@ -70,7 +66,6 @@ def ReadDataSetFiles():
     test_labels_path = directory + 'ownTestLabels.bytes'
     ownTrainImages, ownTrainLabels = ReadOwnFiles(training_images_path, training_labels_path)
     ownTestImages, ownTestLabels = ReadOwnFiles(test_images_path, test_labels_path)
-
 
     # --------------Join DataSets---------------------
     trainImages = np.concatenate((mnistTrainImages, ownTrainImages))
@@ -82,13 +77,10 @@ def ReadDataSetFiles():
     return (trainImages, trainLabels), (testImages, testLabels)
 
 
-
-
 @dataclass
 class Data:
     input: list
     target: list
-
 
 
 def GenerateDataSet(batchSize):
@@ -98,9 +90,9 @@ def GenerateDataSet(batchSize):
 
     if batchSize == 0:
         nbrBatch = 1
+        batchSize = len(trainImages)
     else:
         nbrBatch = len(trainImages) // batchSize
-
 
     trainDataSet = []
     for i in range(0, nbrBatch):
@@ -112,7 +104,6 @@ def GenerateDataSet(batchSize):
             output[label] = 1
             newBatch.append(Data(image, output))
         trainDataSet.append(newBatch)
-
 
     testDataSet = []
     for i in range(len(testImages)):
