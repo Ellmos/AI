@@ -6,7 +6,7 @@ from PIL import Image
 import numpy as np
 
 hp = HyperParameters()
-neural = NeuralFromJson("./saves/OwnSebastian.json", hp)
+neural = NeuralFromJson("./saves/trainOnBanquise.json", hp)
 # neural.ToJson("OwnSebastian")
 
 
@@ -44,9 +44,10 @@ def RunImage():
     #    for i in pixels:
     #        file.write(str(i) + "\n")
     outputs = neural.CalculateOutputs(pixels)
+    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
     for i in range(len(outputs)):
         print(f"{i}: {round(outputs[i] * 100, 3)}%")
-    print(neural.Classify(pixels), "\n\n\n\n\n")
+    # print(neural.Classify(pixels))
 
 
 
