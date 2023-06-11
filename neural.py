@@ -120,9 +120,7 @@ class NeuralNetwork:
                 if options["debug"] and i % printBatch == 0:
                     print("Batch {} out of {}".format(i, nbrBatch))
 
-                t = time()
                 self.FeedBatch(trainDataSet[i], learningRate)
-                print(time() - t)
             accuracyTrain.append(self.DataSetAccuracy(trainDataSet))
             accuracyValidation.append(self.DataSetAccuracy(testDataSet))
 
@@ -147,7 +145,7 @@ class NeuralNetwork:
             plt.savefig(imageName)
 
         # ---------------Save neural--------------
-        self.ToJson("trainOnBanquise")
+        self.ToJson("newDataSet")
 
     def DataPointCost(self, dataPoint):
         outputs = self.CalculateOutputs(dataPoint.input)

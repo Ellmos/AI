@@ -10,19 +10,18 @@ class HyperParameters:
         self.costFunction = CostFunctions.CrossEntropy
         self.initialLearningRate = 0.025
         self.learnRateDecay = 0.075
-        self.batchSize = 0
-        self.epoch = 50
+        self.batchSize = 100
+        self.epoch = 30
 
 
 if __name__ == "__main__":
     # Create neural network
     hp = HyperParameters()
-    neural = NeuralNetwork([784, 300, 10], hp)
+    neural = NeuralNetwork([784, 32, 10], hp)
 
-    # Create dataSet
-    trainDataSet, testDataSet = LoadDataSets(hp.batchSize, mnist=False, modifiedMnist=True, own=True)
+    # Create dataSet (parameters are percentage of each dataset to load)
+    trainDataSet, testDataSet = LoadDataSets(hp.batchSize, mnist=10, modifiedMnist=100, own=10)
 
-    print(len(trainDataSet[0]), len(testDataSet[0]))
     # trainDataSet = trainDataSet[:100 // hp.batchSize]
     # testDataSet[0] = testDataSet[0][:100]
 

@@ -59,7 +59,6 @@ def ReadDataSetFiles(mnist, modifiedMnist, own):
 
     # --------------Load Mnist DataSet---------------------
     if mnist:
-
         directory = os.path.dirname(os.path.abspath(__file__)) + '/mnist/'
         training_images_path = directory + 'train-images.idx3-ubyte'
         training_labels_path = directory + 'train-labels.idx1-ubyte'
@@ -69,8 +68,8 @@ def ReadDataSetFiles(mnist, modifiedMnist, own):
         trainImages, trainLabels = ReadMnistFiles(training_images_path, training_labels_path)
         testImages, testLabels = ReadMnistFiles(test_images_path, test_labels_path)
 
-        lengthTraining = len(trainImages * mnist / 100)
-        lengthTest = len(testImages * mnist / 100)
+        lengthTraining = int(len(trainImages) * mnist / 100)
+        lengthTest = int(len(testImages) * mnist / 100)
         trainingDataSets.append((trainImages[:lengthTraining], trainLabels[:lengthTraining]))
         testDatasets.append((testImages[:lengthTest], testLabels[:lengthTest]))
 
@@ -86,8 +85,8 @@ def ReadDataSetFiles(mnist, modifiedMnist, own):
         trainImages, trainLabels = ReadOwnFiles(training_images_path, training_labels_path)
         testImages, testLabels = ReadOwnFiles(test_images_path, test_labels_path)
 
-        lengthTraining = len(trainImages * modifiedMnist / 100)
-        lengthTest = len(testImages * modifiedMnist / 100)
+        lengthTraining = int(len(trainImages) * modifiedMnist / 100)
+        lengthTest = int(len(testImages) * modifiedMnist / 100)
         trainingDataSets.append((trainImages[:lengthTraining], trainLabels[:lengthTraining]))
         testDatasets.append((testImages[:lengthTest], testLabels[:lengthTest]))
 
@@ -103,22 +102,21 @@ def ReadDataSetFiles(mnist, modifiedMnist, own):
         trainImages, trainLabels = ReadOwnFiles(training_images_path, training_labels_path)
         testImages, testLabels = ReadOwnFiles(test_images_path, test_labels_path)
 
-        lengthTraining = len(trainImages * own / 100)
-        lengthTest = len(testImages * own / 100)
+        lengthTraining = int(len(trainImages) * own / 100)
+        lengthTest = int(len(testImages) * own / 100)
         trainingDataSets.append((trainImages[:lengthTraining], trainLabels[:lengthTraining]))
         testDatasets.append((testImages[:lengthTest], testLabels[:lengthTest]))
-
 
     # --------------Merge DataSets---------------------
     trainImages, trainLabels = trainingDataSets[0]
     for i in range(1, nbrDataset):
-        images, labels = trainingDataSets[1]
+        images, labels = trainingDataSets[i]
         trainImages = np.concatenate((trainImages, images))
         trainLabels = np.concatenate((trainLabels, labels))
 
     testImages, testLabels = testDatasets[0]
     for i in range(1, nbrDataset):
-        images, labels = testDatasets[1]
+        images, labels = testDatasets[i]
         testImages = np.concatenate((testImages, images))
         testLabels = np.concatenate((testLabels, labels))
 
@@ -131,7 +129,6 @@ class Data:
     input: list
     target: list
 
-
 def LoadDataSets(batchSize, mnist=100, modifiedMnist=100, own=100):
     print("--------------Creating Dataset-------------------")
     t = time()
@@ -143,6 +140,7 @@ def LoadDataSets(batchSize, mnist=100, modifiedMnist=100, own=100):
     else:
         nbrBatch = len(trainImages) // batchSize
 
+    # Formatting the outputs and split dataset into batch
     trainDataSet = []
     for i in range(0, nbrBatch):
         newBatch = []
