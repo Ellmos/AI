@@ -1,5 +1,5 @@
 from neural import *
-from dataLoader import GenerateDataSet
+from data.dataLoader import LoadDataSets
 from CostFunctions import CostFunctions
 from ActivationFunctions import ActivationFunctions
 
@@ -10,23 +10,22 @@ class HyperParameters:
         self.costFunction = CostFunctions.CrossEntropy
         self.initialLearningRate = 0.025
         self.learnRateDecay = 0.075
-        self.batchSize = 32
-        self.epoch = 50
+        self.batchSize = 100
+        self.epoch = 30
 
 
 if __name__ == "__main__":
     # Create neural network
     hp = HyperParameters()
-    neural = NeuralNetwork([784, 300, 10], hp)
+    neural = NeuralNetwork([784, 32, 10], hp)
 
-    # Create dataSet
-    trainDataSet, testDataSet = GenerateDataSet(hp.batchSize)
-    print(neural.DataSetAccuracy(testDataSet))
+    # Create dataSet (parameters are percentage of each dataset to load)
+    trainDataSet, testDataSet = LoadDataSets(hp.batchSize, mnist=10, modifiedMnist=100, own=10)
 
-    # trainDataSet = trainDataSet[:10000 // hp.batchSize]
-    # testDataSet = testDataSet[:10000]
+    # trainDataSet = trainDataSet[:100 // hp.batchSize]
+    # testDataSet[0] = testDataSet[0][:100]
 
     # Learning
-    options = {"debug": False, "graph": False, "saveCSV": False}
+    options = {"debug": True, "graph": True}
     neural.Learn(trainDataSet, testDataSet, hp, options)
 
