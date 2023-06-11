@@ -7,9 +7,6 @@ from random import shuffle
 from time import time
 import numpy as np
 
-from discordwebhook import Discord
-
-discord = Discord(url="")
 
 def NeuralFromJson(filePath, hyperParameters):
     with open(filePath, 'r') as file:
@@ -114,7 +111,6 @@ class NeuralNetwork:
         t = time()
         print("\n------------------Learning-----------------------", end="")
         for currentEpoch in range(hp.epoch):
-            discord.post(content=f"--Epoch {currentEpoch + 1} out of {hp.epoch}--")
             if options["debug"]:
                 print(f"\n--Epoch {currentEpoch + 1} out of {hp.epoch}--")
 
@@ -124,10 +120,7 @@ class NeuralNetwork:
                 if options["debug"] and i % printBatch == 0:
                     print("Batch {} out of {}".format(i, nbrBatch))
 
-                batch = trainDataSet[i]
-
-                self.FeedBatch(batch, learningRate)
-
+                self.FeedBatch(trainDataSet[i], learningRate)
             accuracyTrain.append(self.DataSetAccuracy(trainDataSet))
             accuracyValidation.append(self.DataSetAccuracy(testDataSet))
 
@@ -149,16 +142,10 @@ class NeuralNetwork:
 
         if options["graph"]:
             plt.show()
-
-        if options["saveCSV"]:
             plt.savefig(imageName)
-            path = "/home/elmos/Desktop/ai/digits/"
-            with open(path + "hyperParameters/HyperParameters.csv", "a") as file:
-                file.write("{},{},{},{},{},{}\n".format(len(trainDataSet), hp.batchSize, hp.epoch, hp.initialLearningRate, hp.learnRateDecay, f"file://{path}{imageName}"))
 
         # ---------------Save neural--------------
-        self.ToJson("trainOnBanquise")
-        discord.post(content=f"--Done--")
+        self.ToJson("newDataSet")
 
     def DataPointCost(self, dataPoint):
         outputs = self.CalculateOutputs(dataPoint.input)
@@ -229,8 +216,8 @@ class Layer:
         self.weights = activationFunction.value.weightsInitialization(self.nbrNodesIn, self.nbrNodesOut)
 
     def CalculateOutputs(self, inputs):
-        self.weightedSum = []
         self.outputs = []
+        self.weightedSum = []
         for nodesOut in range(self.nbrNodesOut):
             iOutput = self.biases[nodesOut]
             for nodesIn in range(self.nbrNodesIn):
