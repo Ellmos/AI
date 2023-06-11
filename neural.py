@@ -1,9 +1,11 @@
 from ActivationFunctions import ActivationFunctions
 import json
+import os.path
 
 import matplotlib.pyplot as plt
 from random import shuffle
 from time import time
+import numpy as np
 
 
 def NeuralFromJson(filePath, hyperParameters):
@@ -12,9 +14,14 @@ def NeuralFromJson(filePath, hyperParameters):
         layersSizes = content["layersSizes"]
         neural = NeuralNetwork(layersSizes, hyperParameters)
 
+
         for (layer, layerData) in zip(neural.layers, content["layers"]):
             layer.weights = layerData["weights"]
             layer.biases = layerData["biases"]
+
+        # for i in range(len(neural.layers)):
+        #     neural.layers[i].weights = [i.tolist() for i in np.array_split(content["connections"][i]["weights"], neural.layers[i].nbrNodesOut)]
+        #     neural.layers[i].biases = content["connections"][i]["biases"]
 
     return neural
 
@@ -26,7 +33,7 @@ class NeuralNetwork:
         self.Cost = hyperParameters.costFunction.value.function
         self.CostDerivative = hyperParameters.costFunction.value.derivative
 
-    def ToJson(self, path):
+    def ToJson(self, saveName):
         jsonObject = {
             "layersSizes": [self.layers[0].nbrNodesIn],
             "layers": []
@@ -36,7 +43,12 @@ class NeuralNetwork:
             jsonObject["layersSizes"].append(layer.nbrNodesOut)
             jsonObject["layers"].append(layer.ToJson())
 
-        with open(f"saves/{path}.json", "w") as save:
+        path = f"saves/{saveName}.json"
+        while os.path.isfile(path):
+            saveName += "_"
+            path = f"saves/{saveName}.json"
+
+        with open(path, "w") as save:
             save.write(json.dumps(jsonObject))
 
     def SetActivationFunctions(self, ActivationFunction, outputActivationFunction):
@@ -100,7 +112,7 @@ class NeuralNetwork:
         print("\n------------------Learning-----------------------", end="")
         for currentEpoch in range(hp.epoch):
             if options["debug"]:
-                print("\n--Epoch {} out of {}--".format(currentEpoch + 1, hp.epoch))
+                print(f"\n--Epoch {currentEpoch + 1} out of {hp.epoch}--")
 
             learningRate = hp.initialLearningRate * (1 / (1 + hp.learnRateDecay * currentEpoch))
             shuffle(trainDataSet)
@@ -108,10 +120,9 @@ class NeuralNetwork:
                 if options["debug"] and i % printBatch == 0:
                     print("Batch {} out of {}".format(i, nbrBatch))
 
-                batch = trainDataSet[i]
-
-                self.FeedBatch(batch, learningRate)
-
+                t = time()
+                self.FeedBatch(trainDataSet[i], learningRate)
+                print(time() - t)
             accuracyTrain.append(self.DataSetAccuracy(trainDataSet))
             accuracyValidation.append(self.DataSetAccuracy(testDataSet))
 
@@ -133,21 +144,10 @@ class NeuralNetwork:
 
         if options["graph"]:
             plt.show()
-
-        if options["saveCSV"]:
             plt.savefig(imageName)
-            path = "/home/elmos/Desktop/ai/digits/"
-            with open(path + "hyperParameters/HyperParameters.csv", "a") as file:
-                file.write("{},{},{},{},{},{}\n".format(len(trainDataSet), hp.batchSize, hp.epoch, hp.initialLearningRate, hp.learnRateDecay, f"file://{path}{imageName}"))
 
         # ---------------Save neural--------------
-        tmp = input("Do you want to save the neural network? y/n ")
-        while tmp not in ['y', 'n']:
-            tmp = input("Do you want to save the neural network? y/n ")
-
-        if tmp == 'y':
-            name = input("Enter a name for the save: ")
-            self.ToJson(name)
+        self.ToJson("trainOnBanquise")
 
     def DataPointCost(self, dataPoint):
         outputs = self.CalculateOutputs(dataPoint.input)
@@ -218,8 +218,8 @@ class Layer:
         self.weights = activationFunction.value.weightsInitialization(self.nbrNodesIn, self.nbrNodesOut)
 
     def CalculateOutputs(self, inputs):
-        self.weightedSum = []
         self.outputs = []
+        self.weightedSum = []
         for nodesOut in range(self.nbrNodesOut):
             iOutput = self.biases[nodesOut]
             for nodesIn in range(self.nbrNodesIn):

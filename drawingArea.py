@@ -6,7 +6,8 @@ from PIL import Image
 import numpy as np
 
 hp = HyperParameters()
-neural = NeuralFromJson("./saves/trainWholeDay.json", hp)
+neural = NeuralFromJson("./saves/OwnSebastian.json", hp)
+# neural.ToJson("OwnSebastian")
 
 
 def RunImage():
@@ -87,7 +88,7 @@ while running:
         elif event.type == pygame.MOUSEMOTION:
             if drawing:
                 current_pos = pygame.mouse.get_pos()
-                pygame.draw.line(screen, WHITE, last_pos, current_pos, 15)
+                pygame.draw.line(screen, WHITE, last_pos, current_pos, 10)
                 last_pos = current_pos
 
     # Update the screen
