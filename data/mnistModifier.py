@@ -5,7 +5,6 @@ from random import randint, random
 from dataLoader import ReadDataSetFiles
 import os
 
-
 def RotateImage(image, angle):
     imageCenter = tuple(np.array(image.shape[1::-1]) / 2)
     rotMat = cv2.getRotationMatrix2D(imageCenter, angle, 1.0)

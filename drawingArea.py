@@ -5,10 +5,10 @@ import pygame
 from PIL import Image
 import numpy as np
 
-hp = HyperParameters()
-neural = NeuralFromJson("./saves/OwnSebastian.json", hp)
-# neural.ToJson("OwnSebastian")
 
+
+hp = HyperParameters()
+neural = NeuralFromJson("./saves/newDataSet.json", hp)
 
 def RunImage():
     # Convert the drawn image to 28x28 pixels
@@ -38,17 +38,20 @@ def RunImage():
     # new_image.save('C:\\Users\\rdoul\\Desktop\\AI\\CSharp\\images\\1.png', 'PNG')
 
     pixels = np.array(pil_image.getdata())
-    pixels = (pixels * (1.0 / pixels.max())).tolist()
+    pixels = pixels * (1.0 / pixels.max())
 
-    #with open("C:\\Users\\rdoul\\Desktop\\AI\\CSharp\\images\\9.txt", "w") as file:
-    #    for i in pixels:
-    #        file.write(str(i) + "\n")
+    # with open("C:\\Users\\rdoul\\Desktop\\AI\\CSharp\\images\\9.txt", "w") as file:
+    #     for i in pixels:
+    #         file.write(str(i) + "\n")
+
+    # image.extend(pixels.tolist())
+    # ShowImage(np.reshape(image, (28*2 + 5, 28)))
+
+
     outputs = neural.CalculateOutputs(pixels)
     for i in range(len(outputs)):
         print(f"{i}: {round(outputs[i] * 100, 3)}%")
-    print(neural.Classify(pixels), "\n\n\n\n\n")
-
-
+    print("Guessed number:", neural.Classify(pixels))
 
 
 # Initialize Pygame
@@ -88,7 +91,8 @@ while running:
         elif event.type == pygame.MOUSEMOTION:
             if drawing:
                 current_pos = pygame.mouse.get_pos()
-                pygame.draw.line(screen, WHITE, last_pos, current_pos, 10)
+                pygame.draw.circle(screen, WHITE, current_pos, 15)
+                # pygame.draw.line(screen, WHITE, last_pos, current_pos, 45)
                 last_pos = current_pos
 
     # Update the screen
