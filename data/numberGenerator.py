@@ -5,28 +5,29 @@ import sys
 import numpy as np
 
 
-BLACK = (255,255,255,255)
-WHITE = (0,0,0,255)
+BLACK = (255, 255, 255, 255)
+WHITE = (0, 0, 0, 255)
 DISPLACEMENT = 2
-RANDOM_NOISE = 5
 
 width = 28
 height = 28
 
+directory = os.path.dirname(os.path.abspath(__file__)) + '/ownDataSet/'
+fontDirectory = directory + "fonts/"
+
 fonts = []
-dir_list = os.listdir('./fonts')
-for f in dir_list:
-    fonts.append('./fonts/'+f)
+for f in os.listdir(fontDirectory):
+    fonts.append(fontDirectory + f)
 
-lenfont = len(fonts)
+lenFont = len(fonts)
 
-def create_image(iteration, trainDataSet):
-    if trainDataSet:
-        imageFile = open("./ownTrainImages.bytes", "wb")
-        labelFile = open("./ownTrainLabels.bytes", "wb")
+def create_image(iteration, isTrainDataSet):
+    if isTrainDataSet:
+        imageFile = open(directory + "ownTrainImages.bytes", "wb")
+        labelFile = open(directory + "ownTrainLabels.bytes", "wb")
     else:
-        imageFile = open("./ownTestImages.bytes", "wb")
-        labelFile = open("./ownTestLabels.bytes", "wb")
+        imageFile = open(directory + "ownTestImages.bytes", "wb")
+        labelFile = open(directory + "ownTestLabels.bytes", "wb")
 
 
     imageFile.write(iteration.to_bytes(8, "little"))
@@ -36,7 +37,7 @@ def create_image(iteration, trainDataSet):
         num = random.randrange(0, 10)
         rotate = random.randrange(-10, 10)
 
-        img = Image.new(mode = "RGB", size= (width, height), color=WHITE)
+        img = Image.new(mode="RGB", size=(width, height), color=WHITE)
         img = img.rotate(rotate, fillcolor=WHITE)
 
         draw = ImageDraw.Draw(img)
@@ -46,24 +47,24 @@ def create_image(iteration, trainDataSet):
             y = random.randrange(0, height)
             x_size = random.randrange(1, 2)
             y_size = random.randrange(1, 2)
-            draw.rectangle((x,y,x+x_size,y+y_size), fill=BLACK)
+            draw.rectangle((x, y, x+x_size, y+y_size), fill=BLACK)
         
-        imgx = img.filter(ImageFilter.GaussianBlur(0.1))
-        drawx = ImageDraw.Draw(imgx)
+        imgX = img.filter(ImageFilter.GaussianBlur(0.1))
+        drawX = ImageDraw.Draw(imgX)
 
         d_x = random.randrange(-DISPLACEMENT, DISPLACEMENT)
         d_y = random.randrange(-DISPLACEMENT, DISPLACEMENT)
 
-        fontname = fonts[random.randrange(0, lenfont)]
+        fontname = fonts[random.randrange(0, lenFont)]
         font = ImageFont.truetype(fontname, random.randrange(10, 24))
-        drawx.text((width/2+d_x,height/2+d_y), str(num), font=font, anchor="mm", fill=BLACK)
+        drawX.text((width/2+d_x, height/2+d_y), str(num), font=font, anchor="mm", fill=BLACK)
 
-        imgx = imgx.rotate(-rotate, fillcolor=WHITE)
+        imgX = imgX.rotate(-rotate, fillcolor=WHITE)
 
-        blur = imgx.filter(ImageFilter.GaussianBlur(0.1))
-        
+        blur = imgX.filter(ImageFilter.GaussianBlur(0.1))
 
-        img = blur.convert('L') 
+
+        img = blur.convert('L')
         # imageFilename = hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()[:8]
         # img.save("./output/"+str(num)+"__"+imageFilename+".bmp", format="BMP")
 
