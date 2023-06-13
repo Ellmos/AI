@@ -17,7 +17,7 @@ def RunImage():
 
     # Create a new PIL Image with proper orientation
     pil_image = Image.fromarray(drawn_image)
-    pil_image = pil_image.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+    pil_image = pil_image.transpose(Image.FLIP_TOP_BOTTOM)
     pil_image = pil_image.rotate(-90)
 
     # Adjust the aspect ratio to fill a 28x28 image
