@@ -34,25 +34,11 @@ def RunImage():
         left_margin = (28 - new_width) // 2
         new_image.paste(resized_image, (left_margin, 0))
 
-    # Save the image
-    # new_image.save('C:\\Users\\rdoul\\Desktop\\AI\\CSharp\\images\\1.png', 'PNG')
-
     pixels = np.array(pil_image.getdata())
     pixels = pixels * (1.0 / pixels.max())
 
-    # with open("C:\\Users\\rdoul\\Desktop\\AI\\CSharp\\images\\9.txt", "w") as file:
-    #     for i in pixels:
-    #         file.write(str(i) + "\n")
 
-    # image.extend(pixels.tolist())
-    # ShowImage(np.reshape(image, (28*2 + 5, 28)))
-
-
-    outputs = neural.CalculateOutputs(pixels)
-    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-    for i in range(len(outputs)):
-        print(f"{i}: {round(outputs[i] * 100, 3)}%")
-    print(neural.Classify(pixels), "\n\n\n\n\n")
+    print(neural.Classify(pixels))
 
 
 # Initialize Pygame
@@ -69,8 +55,8 @@ WHITE = (255, 255, 255)
 
 # Set up the drawing variables
 drawing = False
-last_pos = None
 
+print("\nLeft click: draw / Right click: erase / c: Clear / Return: Submit")
 # Game loop
 running = True
 while running:
@@ -85,20 +71,15 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:  # Left mouse button
                 drawing = True
-                last_pos = pygame.mouse.get_pos()
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
                 drawing = False
         elif event.type == pygame.MOUSEMOTION:
             if drawing:
-                current_pos = pygame.mouse.get_pos()
-                pygame.draw.circle(screen, WHITE, current_pos, 15)
-                # pygame.draw.line(screen, WHITE, last_pos, current_pos, 45)
-                last_pos = current_pos
+                pygame.draw.circle(screen, WHITE, pygame.mouse.get_pos(), 25)
 
     # Update the screen
     pygame.display.flip()
-
 
 
 # Quit the program

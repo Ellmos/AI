@@ -20,10 +20,7 @@ if __name__ == "__main__":
     neural = NeuralNetwork([784, 32, 10], hp)
 
     # Create dataSet (parameters are percentage of each dataset to load)
-    trainDataSet, testDataSet = LoadDataSets(hp.batchSize, mnist=10, modifiedMnist=100, own=10)
-
-    # trainDataSet = trainDataSet[:100 // hp.batchSize]
-    # testDataSet[0] = testDataSet[0][:100]
+    trainDataSet, testDataSet = LoadDataSets(hp.batchSize, mnist=10, modifiedMnist=100, own=100)
 
     # Learning
     options = {"debug": True, "graph": True}
