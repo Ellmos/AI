@@ -4,7 +4,7 @@ __pycache__
 
 dataset*.png
 
-data/ownDataSet/own* 
-data/modifiedMnist/* 
+data/ownDataSet/*.bytes 
+data/modifiedMnist/*.bytes
 
 drawn_digit.png
